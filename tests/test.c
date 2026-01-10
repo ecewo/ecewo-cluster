@@ -1,0 +1,88 @@
+#include "ecewo-cluster.h"
+#include "ecewo.h"
+#include "tester.h"
+#include <string.h>
+#include <stdio.h>
+
+#define REQUEST_COUNT 5
+
+static bool worker_started = false;
+static bool worker_exited = false;
+static uint8_t last_worker_id = 0;
+static int last_exit_status = 0;
+static bool last_is_crash = false;
+
+void test_worker_start_callback(uint8_t worker_id) {
+  worker_started = true;
+  last_worker_id = worker_id;
+}
+
+void test_worker_exit_callback(uint8_t worker_id, int status, bool is_crash) {
+  worker_exited = true;
+  last_worker_id = worker_id;
+  last_exit_status = status;
+  last_is_crash = is_crash;
+}
+
+int test_cluster_cpu_count(void) {
+  uint8_t cpu_count = cluster_cpus();
+
+  ASSERT_GT(cpu_count, 0);
+  ASSERT_LE(cpu_count, 255);
+
+  RETURN_OK();
+}
+
+int test_cluster_callbacks(void) {
+  worker_started = false;
+  worker_exited = false;
+
+  Cluster config = {
+    .cpus = cluster_cpus(),
+    .respawn = true,
+    .port = 3000,
+    .on_start = test_worker_start_callback,
+    .on_exit = test_worker_exit_callback
+  };
+
+  ASSERT_GT(config.cpus, 0);
+  ASSERT_NOT_NULL(config.on_start);
+  ASSERT_NOT_NULL(config.on_exit);
+
+  RETURN_OK();
+}
+
+int test_cluster_invalid_config(void) {
+  Cluster *null_config = NULL;
+  bool init_result = cluster_init(null_config, 0, NULL);
+  ASSERT_FALSE(init_result);
+
+  Cluster invalid_workers = {
+    .cpus = 0,
+    .port = 3000
+  };
+  init_result = cluster_init(&invalid_workers, 0, NULL);
+  ASSERT_FALSE(init_result);
+
+  Cluster invalid_port = {
+    .cpus = 2,
+    .port = 0
+  };
+  init_result = cluster_init(&invalid_port, 0, NULL);
+  ASSERT_FALSE(init_result);
+
+  RETURN_OK();
+}
+
+int test_cluster_port_strategy(void) {
+  Cluster config = {
+    .cpus = 4,
+    .respawn = true,
+    .port = 3000
+  };
+
+  ASSERT_EQ(config.port, 3000);
+  ASSERT_EQ(config.cpus, 4);
+
+  RETURN_OK();
+}
