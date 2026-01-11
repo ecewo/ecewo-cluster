@@ -168,7 +168,7 @@ void print_cluster_stats(void) {
         return;
     
     cluster_stats_t stats;
-    if (!cluster_get_stats(&stats)) {
+    if (cluster_get_stats(&stats) != 0) {
         printf("Failed to get stats\n");
         return;
     }
@@ -623,7 +623,7 @@ void handle_stats(Req *req, Res *res) {
     // In real app, use IPC to query master from workers
     
     cluster_stats_t stats;
-    if (!cluster_get_stats(&stats)) {
+    if (cluster_get_stats(&stats) != 0) {
         send_text(res, INTERNAL_SERVER_ERROR, "Not master process");
         return;
     }

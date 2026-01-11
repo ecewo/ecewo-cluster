@@ -22,7 +22,9 @@ typedef struct {
   void (*on_exit)(uint8_t worker_id, int exit_status, bool is_crash);
 } Cluster;
 
-bool cluster_init(const Cluster *options, int argc, char **argv);
+// 0 on success, -1 on failure
+int cluster_init(const Cluster *options, int argc, char **argv);
+
 uint16_t cluster_get_port(void);
 bool cluster_is_master(void);
 bool cluster_is_worker(void);
@@ -41,19 +43,19 @@ typedef enum {
   WORKER_CRASHED, // Exited unexpectedly
   WORKER_RESPAWNING, // Crashed, waiting to respawn
   WORKER_DISABLED // Respawn disabled (too many crashes)
-} worker_status_t;
+} WorkerStatus;
 
 typedef struct {
   uint8_t worker_id; // Worker ID (0-based)
   int pid; // Process ID (0 if not running)
   uint16_t port; // Port worker is bound to
-  worker_status_t status; // Current status
+  WorkerStatus status; // Current status
   time_t start_time; // When worker started (0 if not running)
   time_t uptime_seconds; // How long worker has been running
   int exit_status; // Last exit code (0 if still running)
   uint8_t crash_count; // Crashes within respawn window
   bool respawn_disabled; // Respawn disabled due to crash loop
-} worker_stats_t;
+} WorkerStats;
 
 typedef struct {
   uint8_t total_workers; // Total configured workers
@@ -63,11 +65,14 @@ typedef struct {
   bool shutdown_requested; // Shutdown in progress
   bool restart_requested; // Graceful restart in progress
   uint64_t total_restarts; // Total worker restarts since start
-} cluster_stats_t;
+} ClusterStats;
 
-int cluster_get_worker_stats(uint8_t worker_id, worker_stats_t *stats);
-int cluster_get_stats(cluster_stats_t *stats);
-int cluster_get_all_workers(worker_stats_t *stats_array, int array_size);
+// 0 on success, -1 on failure
+int cluster_get_worker_stats(uint8_t worker_id, WorkerStats *stats);
+int cluster_get_stats(ClusterStats *stats);
+
+// Returns worker count
+int cluster_get_all_workers(WorkerStats *stats_array, int array_size);
 
 #ifdef __cplusplus
 }

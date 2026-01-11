@@ -46,7 +46,7 @@ typedef struct {
   uint8_t worker_id;
   uint16_t port;
   int pid;
-  worker_status_t status;
+  WorkerStatus status;
 
   time_t restart_times[10]; // Circular buffer for crash times
   uint8_t restart_count;
@@ -657,15 +657,15 @@ static void cluster_cleanup(void) {
   ecewo_cluster.initialized = false;
 }
 
-bool cluster_init(const Cluster *options, int argc, char **argv) {
+int cluster_init(const Cluster *options, int argc, char **argv) {
   if (ecewo_cluster.initialized) {
     LOG_ERROR("Cluster already initialized");
-    return false;
+    return -1;
   }
 
   if (!options || options->port == 0 || !argv) {
     LOG_ERROR("Invalid cluster configuration (port required)");
-    return false;
+    return -1;
   }
 
   save_original_args(argc, argv);
@@ -695,7 +695,7 @@ bool cluster_init(const Cluster *options, int argc, char **argv) {
       uv_set_process_title(title);
 
       ecewo_cluster.initialized = true;
-      return false; // Worker process
+      return -1; // Worker process
     }
   }
 
@@ -714,7 +714,7 @@ bool cluster_init(const Cluster *options, int argc, char **argv) {
   if (!ecewo_cluster.workers) {
     LOG_ERROR("Failed to allocate worker array");
     cleanup_original_args();
-    return false;
+    return -1;
   }
 
   // Spawn workers with delays
@@ -729,13 +729,12 @@ bool cluster_init(const Cluster *options, int argc, char **argv) {
       if (failed_count > ecewo_cluster.worker_count / 2) {
         LOG_ERROR("Too many spawn failures, aborting");
         cleanup_original_args();
-        return false;
+        return -1;
       }
     }
 
-    if (i < ecewo_cluster.worker_count - 1) {
+    if (i < ecewo_cluster.worker_count - 1)
       uv_sleep(ecewo_cluster.config.worker_startup_delay_ms);
-    }
   }
 
   uv_sleep(500);
@@ -745,7 +744,7 @@ bool cluster_init(const Cluster *options, int argc, char **argv) {
   printf("Server listening on http://localhost:%" PRIu16 " (Cluster: %d CPUs)\n",
          ecewo_cluster.base_port, ecewo_cluster.worker_count);
 
-  return true; // Master process
+  return 0; // Master process
 }
 
 uint16_t cluster_get_port(void) {
@@ -999,14 +998,14 @@ uint8_t cluster_cpus(void) {
   return (uint8_t)parallelism;
 }
 
-int cluster_get_worker_stats(uint8_t worker_id, worker_stats_t *stats) {
+int cluster_get_worker_stats(uint8_t worker_id, WorkerStats *stats) {
   if (!ecewo_cluster.is_master || !ecewo_cluster.initialized) {
     LOG_ERROR("Only master can get worker stats");
-    return 0;
+    return -1;
   }
 
   if (worker_id >= ecewo_cluster.worker_count || !stats) {
-    return 0;
+    return -1;
   }
 
   worker_process_t *worker = &ecewo_cluster.workers[worker_id];
@@ -1023,17 +1022,17 @@ int cluster_get_worker_stats(uint8_t worker_id, worker_stats_t *stats) {
   stats->crash_count = worker->restart_count;
   stats->respawn_disabled = worker->respawn_disabled;
 
-  return 1;
+  return 0;
 }
 
-int cluster_get_stats(cluster_stats_t *stats) {
+int cluster_get_stats(ClusterStats *stats) {
   if (!ecewo_cluster.is_master || !ecewo_cluster.initialized) {
     LOG_ERROR("Only master can get cluster stats");
-    return 0;
+    return -1;
   }
 
   if (!stats)
-    return 0;
+    return -1;
 
   stats->total_workers = ecewo_cluster.worker_count;
   stats->active_workers = 0;
@@ -1054,10 +1053,10 @@ int cluster_get_stats(cluster_stats_t *stats) {
       stats->disabled_workers++;
   }
 
-  return 1;
+  return 0;
 }
 
-int cluster_get_all_workers(worker_stats_t *stats_array, int array_size) {
+int cluster_get_all_workers(WorkerStats *stats_array, int array_size) {
   if (!ecewo_cluster.is_master || !ecewo_cluster.initialized) {
     LOG_ERROR("Only master can get all worker stats");
     return 0;

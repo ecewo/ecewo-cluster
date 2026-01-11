@@ -54,22 +54,22 @@ int test_cluster_callbacks(void) {
 
 int test_cluster_invalid_config(void) {
   Cluster *null_config = NULL;
-  bool init_result = cluster_init(null_config, 0, NULL);
-  ASSERT_FALSE(init_result);
+  int init_result = cluster_init(null_config, 0, NULL);
+  ASSERT_NE(init_result, 0);
 
   Cluster invalid_workers = {
     .cpus = 0,
     .port = 3000
   };
   init_result = cluster_init(&invalid_workers, 0, NULL);
-  ASSERT_FALSE(init_result);
+  ASSERT_NE(init_result, 0);
 
   Cluster invalid_port = {
     .cpus = 2,
     .port = 0
   };
   init_result = cluster_init(&invalid_port, 0, NULL);
-  ASSERT_FALSE(init_result);
+  ASSERT_NE(init_result, 0);
 
   RETURN_OK();
 }
