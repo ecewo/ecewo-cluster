@@ -17,7 +17,7 @@ if (PROJECT_IS_TOP_LEVEL AND NOT TARGET ecewo::ecewo)
   FetchContent_Declare(
     ecewo
     GIT_REPOSITORY https://github.com/savashn/ecewo.git
-    GIT_TAG        dev
+    GIT_TAG        v3.1.0
     GIT_SHALLOW    TRUE
   )
 
