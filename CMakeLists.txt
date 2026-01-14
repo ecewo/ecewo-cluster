@@ -24,48 +24,43 @@ if (PROJECT_IS_TOP_LEVEL AND NOT TARGET ecewo::ecewo)
   FetchContent_MakeAvailable(ecewo)
 endif()
 
-target_link_libraries(ecewo_cluster PUBLIC ecewo::ecewo)
-
 target_compile_definitions(ecewo_cluster PRIVATE _GNU_SOURCE)
 
 if (PROJECT_IS_TOP_LEVEL AND TARGET ecewo::ecewo)
+  enable_testing()
 
-  option(ECEWO_CLUSTER_BUILD_TESTS "Build tests" ON)
+  add_executable(ecewo_cluster_test
+    tests/test.c
+    tests/runner.c
+  )
 
-  if (ECEWO_CLUSTER_BUILD_TESTS)
-    enable_testing()
+  target_include_directories(ecewo_cluster_test
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests
+  )
 
-    add_executable(ecewo_cluster_test
-      tests/test.c
-      tests/runner.c
-    )
+  target_link_libraries(ecewo_cluster_test
+    PRIVATE
+      ecewo::ecewo
+      ecewo::cluster
+  )
 
-    target_include_directories(ecewo_cluster_test
-      PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests
-    )
-
-    target_link_libraries(ecewo_cluster_test
-      PRIVATE
-        ecewo::ecewo
-        ecewo::cluster
-    )
-
-    if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-      target_compile_options(ecewo_cluster_test PRIVATE
-        -Wall
-        -Wextra
-        -Werror
-        -Wstrict-prototypes
-        -Wincompatible-pointer-types
-        -Wno-unused-parameter
-      )
-    endif()
-
-    add_test(
-      NAME ecewo_cluster_all
-      COMMAND ecewo_cluster_test
+  if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(ecewo_cluster_test PRIVATE
+      -Wall
+      -Wextra
+      -Werror
+      -Wstrict-prototypes
+      -Wincompatible-pointer-types
+      -Wno-unused-parameter
     )
   endif()
+
+  add_test(
+    NAME ecewo_cluster_all
+    COMMAND ecewo_cluster_test
+  )
 endif()
+
+target_link_libraries(ecewo_cluster PUBLIC ecewo::ecewo)

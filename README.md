@@ -8,11 +8,12 @@ ecewo is single-threaded by default, but can utilize all CPU cores using the clu
 ## Table of Contents
 
 1. [Core Concepts](#core-concepts)
-2. [Quick Start](#quick-start)
-3. [Configuration](#configuration)
-4. [Advanced Features](#advanced-features)
-5. [API Reference](#api-reference)
-6. [Examples](#examples)
+2. [Installation](#installation)
+3. [Quick Start](#quick-start)
+4. [Configuration](#configuration)
+5. [Advanced Features](#advanced-features)
+6. [API Reference](#api-reference)
+7. [Examples](#examples)
 
 ## Core Concepts
 
@@ -22,6 +23,19 @@ Cluster plugin provides multi-process clustering support for your application, e
 - Auto-restart - Crashed workers are automatically respawned
 - Load balancing - Distribute load across CPU cores
 - Zero-downtime updates - Gracefully restart workers one by one
+
+## Installation
+
+Add to your `CMakeLists.txt`:
+
+```sh
+ecewo_plugin(cluster)
+
+target_link_libraries(app PRIVATE
+    ecewo::ecewo
+    ecewo::cluster
+)
+```
 
 ## Quick Start
 ```c
