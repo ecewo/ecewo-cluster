@@ -34,7 +34,7 @@ sharing a single port via `SO_REUSEPORT`).
 ## Installation
 
 ```cmake
-ecewo_plugin(cluster)
+ecewo_add(cluster@v0.2.0)
 
 target_link_libraries(app PRIVATE
   ecewo::ecewo
