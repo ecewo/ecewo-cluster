@@ -123,34 +123,44 @@ void ecewo_cluster_config_free(ecewo_cluster_config_t *cfg) {
 }
 
 void ecewo_cluster_config_set_cpus(ecewo_cluster_config_t *cfg, uint8_t cpus) {
-  if (cfg) cfg->cpus = cpus;
+  if (cfg)
+    cfg->cpus = cpus;
 }
 void ecewo_cluster_config_set_port(ecewo_cluster_config_t *cfg, uint16_t port) {
-  if (cfg) cfg->port = port;
+  if (cfg)
+    cfg->port = port;
 }
 void ecewo_cluster_config_set_respawn(ecewo_cluster_config_t *cfg, bool respawn) {
-  if (cfg) cfg->respawn = respawn;
+  if (cfg)
+    cfg->respawn = respawn;
 }
 void ecewo_cluster_config_set_shutdown_timeout(ecewo_cluster_config_t *cfg, uint32_t ms) {
-  if (cfg) cfg->shutdown_timeout_ms = ms;
+  if (cfg)
+    cfg->shutdown_timeout_ms = ms;
 }
 void ecewo_cluster_config_set_respawn_window(ecewo_cluster_config_t *cfg, uint32_t seconds) {
-  if (cfg) cfg->respawn_window_sec = seconds;
+  if (cfg)
+    cfg->respawn_window_sec = seconds;
 }
 void ecewo_cluster_config_set_respawn_max_crashes(ecewo_cluster_config_t *cfg, uint8_t max_crashes) {
-  if (cfg) cfg->respawn_max_crashes = max_crashes;
+  if (cfg)
+    cfg->respawn_max_crashes = max_crashes;
 }
 void ecewo_cluster_config_set_worker_startup_delay(ecewo_cluster_config_t *cfg, uint32_t ms) {
-  if (cfg) cfg->worker_startup_delay_ms = ms;
+  if (cfg)
+    cfg->worker_startup_delay_ms = ms;
 }
 void ecewo_cluster_config_set_worker_respawn_delay(ecewo_cluster_config_t *cfg, uint32_t ms) {
-  if (cfg) cfg->worker_respawn_delay_ms = ms;
+  if (cfg)
+    cfg->worker_respawn_delay_ms = ms;
 }
 void ecewo_cluster_config_set_on_start(ecewo_cluster_config_t *cfg, ecewo_cluster_on_start_t cb) {
-  if (cfg) cfg->on_start = cb;
+  if (cfg)
+    cfg->on_start = cb;
 }
 void ecewo_cluster_config_set_on_exit(ecewo_cluster_config_t *cfg, ecewo_cluster_on_exit_t cb) {
-  if (cfg) cfg->on_exit = cb;
+  if (cfg)
+    cfg->on_exit = cb;
 }
 
 // ---------------------------------------------------------------------------
@@ -566,24 +576,30 @@ static void send_stop_to_workers(void) {
 }
 
 static void on_sigterm(uv_signal_t *handle, int signum) {
-  (void)handle; (void)signum;
-  if (!state.is_master || state.shutdown_requested) return;
+  (void)handle;
+  (void)signum;
+  if (!state.is_master || state.shutdown_requested)
+    return;
   LOG_INFO("Shutdown requested (SIGTERM)");
   state.shutdown_requested = true;
   send_stop_to_workers();
 }
 
 static void on_sigint(uv_signal_t *handle, int signum) {
-  (void)handle; (void)signum;
-  if (!state.is_master || state.shutdown_requested) return;
+  (void)handle;
+  (void)signum;
+  if (!state.is_master || state.shutdown_requested)
+    return;
   LOG_INFO("Shutdown requested (SIGINT)");
   state.shutdown_requested = true;
   send_stop_to_workers();
 }
 
 static void on_sigusr2(uv_signal_t *handle, int signum) {
-  (void)handle; (void)signum;
-  if (!state.is_master) return;
+  (void)handle;
+  (void)signum;
+  if (!state.is_master)
+    return;
   if (state.graceful_restart_requested || state.shutdown_requested) {
     LOG_INFO("Graceful restart already in progress");
     return;
@@ -593,7 +609,8 @@ static void on_sigusr2(uv_signal_t *handle, int signum) {
 }
 
 static void setup_signal_handlers(void) {
-  if (!state.is_master) return;
+  if (!state.is_master)
+    return;
 
   uv_loop_t *loop = uv_default_loop();
   uv_signal_init(loop, &state.sigterm);
@@ -621,7 +638,8 @@ static void cleanup_signal_handlers(void) {
 
 static void close_handle_cb(uv_handle_t *handle, void *arg) {
   (void)arg;
-  if (uv_is_closing(handle)) return;
+  if (uv_is_closing(handle))
+    return;
   if (handle->type == UV_SIGNAL) {
     uv_signal_stop((uv_signal_t *)handle);
   } else if (handle->type == UV_TIMER) {
@@ -633,7 +651,8 @@ static void close_handle_cb(uv_handle_t *handle, void *arg) {
 }
 
 static void cluster_cleanup(void) {
-  if (!state.initialized) return;
+  if (!state.initialized)
+    return;
 
   if (state.workers) {
     free(state.workers);
@@ -750,7 +769,8 @@ ecewo_cluster_role_t ecewo_cluster_init(const ecewo_cluster_config_t *config, in
 }
 
 uint16_t ecewo_cluster_port(void) {
-  if (!state.initialized) return 0;
+  if (!state.initialized)
+    return 0;
   return state.is_master ? state.base_port : state.worker_port;
 }
 
@@ -813,7 +833,8 @@ void ecewo_cluster_wait(void) {
         break;
       }
     }
-    if (!any_active) break;
+    if (!any_active)
+      break;
 
     if (state.shutdown_requested) {
       if (shutdown_started_at == 0)
@@ -845,7 +866,8 @@ void ecewo_cluster_wait(void) {
 
 static long count_physical_cores(void) {
   int max_cpu = (int)sysconf(_SC_NPROCESSORS_ONLN);
-  if (max_cpu <= 0 || max_cpu > 1024) return -1;
+  if (max_cpu <= 0 || max_cpu > 1024)
+    return -1;
 
   bool core_seen[1024] = { 0 };
   int unique_cores = 0;
@@ -858,7 +880,8 @@ static long count_physical_cores(void) {
     uv_fs_t open_req;
     int fd = uv_fs_open(NULL, &open_req, path, O_RDONLY, 0, NULL);
     uv_fs_req_cleanup(&open_req);
-    if (fd < 0) continue;
+    if (fd < 0)
+      continue;
 
     char buf[32];
     uv_buf_t uv_buf = uv_buf_init(buf, sizeof(buf) - 1);
@@ -872,8 +895,7 @@ static long count_physical_cores(void) {
       char *endptr;
       errno = 0;
       long core_id = strtol(buf, &endptr, 10);
-      if (errno == 0 && endptr != buf && *endptr == '\0' &&
-          core_id >= 0 && core_id < 1024 && !core_seen[core_id]) {
+      if (errno == 0 && endptr != buf && *endptr == '\0' && core_id >= 0 && core_id < 1024 && !core_seen[core_id]) {
         core_seen[core_id] = true;
         unique_cores++;
       }
@@ -889,11 +911,14 @@ static long count_physical_cores(void) {
 
 uint8_t ecewo_cluster_cpus_physical(void) {
   long logical_cores = sysconf(_SC_NPROCESSORS_ONLN);
-  if (logical_cores > 255) logical_cores = 255;
-  if (logical_cores < 1) return 1;
+  if (logical_cores > 255)
+    logical_cores = 255;
+  if (logical_cores < 1)
+    return 1;
 
   long physical = count_physical_cores();
-  if (physical > 0) return (uint8_t)physical;
+  if (physical > 0)
+    return (uint8_t)physical;
 
   // Fallback: detect HT via thread_siblings_list.
   physical = logical_cores;
@@ -914,14 +939,19 @@ uint8_t ecewo_cluster_cpus_physical(void) {
 
     if (nread > 0) {
       line[nread] = '\0';
-      if (line[nread - 1] == '\n') line[nread - 1] = '\0';
+      if (line[nread - 1] == '\n')
+        line[nread - 1] = '\0';
 
       int sibling_count = 1;
       bool has_comma = false;
       bool has_dash = false;
       for (char *p = line; *p; p++) {
-        if (*p == ',') { sibling_count++; has_comma = true; }
-        else if (*p == '-') { has_dash = true; }
+        if (*p == ',') {
+          sibling_count++;
+          has_comma = true;
+        } else if (*p == '-') {
+          has_dash = true;
+        }
       }
 
       if (has_dash && !has_comma) {
@@ -949,13 +979,15 @@ uint8_t ecewo_cluster_cpus_physical(void) {
     uv_fs_req_cleanup(&close_req);
   }
 
-  if (physical < 1) physical = 1;
+  if (physical < 1)
+    physical = 1;
   return (uint8_t)physical;
 }
 
 uint8_t ecewo_cluster_cpus(void) {
   unsigned int parallelism = uv_available_parallelism();
-  if (parallelism > 255) return 255;
+  if (parallelism > 255)
+    return 255;
   return (uint8_t)parallelism;
 }
 
@@ -972,8 +1004,10 @@ void ecewo_worker_stats_free(ecewo_worker_stats_t *stats) {
 }
 
 int ecewo_cluster_get_worker_stats(uint8_t worker_id, ecewo_worker_stats_t *stats) {
-  if (!state.is_master || !state.initialized) return -1;
-  if (worker_id >= state.worker_count || !stats) return -1;
+  if (!state.is_master || !state.initialized)
+    return -1;
+  if (worker_id >= state.worker_count || !stats)
+    return -1;
 
   worker_process_t *w = &state.workers[worker_id];
   stats->worker_id = w->worker_id;
@@ -982,8 +1016,8 @@ int ecewo_cluster_get_worker_stats(uint8_t worker_id, ecewo_worker_stats_t *stat
   stats->status = w->status;
   stats->start_time = (int64_t)w->start_time;
   stats->uptime_seconds = w->status == ECEWO_WORKER_ACTIVE
-                            ? (int64_t)(time(NULL) - w->start_time)
-                            : 0;
+      ? (int64_t)(time(NULL) - w->start_time)
+      : 0;
   stats->exit_status = w->exit_status;
   stats->crash_count = w->restart_count;
   stats->respawn_disabled = w->respawn_disabled;
@@ -1027,8 +1061,10 @@ void ecewo_cluster_stats_free(ecewo_cluster_stats_t *stats) {
 }
 
 int ecewo_cluster_get_stats(ecewo_cluster_stats_t *stats) {
-  if (!state.is_master || !state.initialized) return -1;
-  if (!stats) return -1;
+  if (!state.is_master || !state.initialized)
+    return -1;
+  if (!stats)
+    return -1;
 
   stats->total_workers = state.worker_count;
   stats->active_workers = 0;
@@ -1040,10 +1076,17 @@ int ecewo_cluster_get_stats(ecewo_cluster_stats_t *stats) {
 
   for (uint8_t i = 0; i < state.worker_count; i++) {
     switch (state.workers[i].status) {
-      case ECEWO_WORKER_ACTIVE:   stats->active_workers++; break;
-      case ECEWO_WORKER_CRASHED:  stats->crashed_workers++; break;
-      case ECEWO_WORKER_DISABLED: stats->disabled_workers++; break;
-      default: break;
+    case ECEWO_WORKER_ACTIVE:
+      stats->active_workers++;
+      break;
+    case ECEWO_WORKER_CRASHED:
+      stats->crashed_workers++;
+      break;
+    case ECEWO_WORKER_DISABLED:
+      stats->disabled_workers++;
+      break;
+    default:
+      break;
     }
   }
   return 0;
@@ -1072,13 +1115,16 @@ uint64_t ecewo_cluster_stats_total_restarts(const ecewo_cluster_stats_t *s) {
 }
 
 int ecewo_cluster_get_all_workers(ecewo_worker_stats_t **stats_array, int array_size) {
-  if (!state.is_master || !state.initialized) return 0;
-  if (!stats_array || array_size <= 0) return 0;
+  if (!state.is_master || !state.initialized)
+    return 0;
+  if (!stats_array || array_size <= 0)
+    return 0;
 
   int count = state.worker_count < array_size ? state.worker_count : array_size;
   int populated = 0;
   for (int i = 0; i < count; i++) {
-    if (!stats_array[i]) continue;
+    if (!stats_array[i])
+      continue;
     if (ecewo_cluster_get_worker_stats((uint8_t)i, stats_array[i]) == 0)
       populated++;
   }

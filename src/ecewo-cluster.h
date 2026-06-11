@@ -63,7 +63,7 @@ typedef void (*ecewo_cluster_on_exit_t)(uint8_t worker_id, int exit_status, bool
 typedef enum {
   ECEWO_CLUSTER_ROLE_ERROR = -1, // Initialization failed
   ECEWO_CLUSTER_ROLE_MASTER = 0, // This process should supervise workers
-  ECEWO_CLUSTER_ROLE_WORKER = 1  // This process should run the ecewo app
+  ECEWO_CLUSTER_ROLE_WORKER = 1 // This process should run the ecewo app
 } ecewo_cluster_role_t;
 
 /** Lifecycle state of a worker process tracked by the master. */
